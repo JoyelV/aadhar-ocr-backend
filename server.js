@@ -6,7 +6,7 @@ const Tesseract = require("tesseract.js");
 const fs = require("fs");
 
 const app = express();
-app.use(cors({ origin: "https://frontend-pied-phi-26.vercel.app" }));
+app.use(cors({ origin: "https://frontend-pied-phi-26.vercel.app/" }));
 app.use(express.json());
 
 // Setup Multer for file uploads
