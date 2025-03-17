@@ -35,7 +35,7 @@ app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaa
   if (!req.files.aadhaarFront || !req.files.aadhaarBack) {
     return res.status(400).json({ error: "Both front and back Aadhaar images are required!" });
   }
-
+  console.log("hello from backend",aadhaarBack,aadhaarFront);
   const frontImagePath = req.files.aadhaarFront[0].path;
   const backImagePath = req.files.aadhaarBack[0].path;
 
