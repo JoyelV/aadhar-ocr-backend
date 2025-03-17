@@ -6,13 +6,9 @@ const Tesseract = require("tesseract.js");
 const fs = require("fs");
 
 const app = express();
+//app.use(cors({ origin: "http://localhost:3000" }));
 app.use(cors({ origin: "https://frontend-pied-phi-26.vercel.app" }));
 app.use(express.json());
-
-app.use(express.static("public"));
-app.get("/manifest.json", (req, res) => {
-  res.sendFile(__dirname + "/public/manifest.json");
-});
 
 // Setup Multer for file uploads
 const storage = multer.diskStorage({
@@ -35,7 +31,6 @@ app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaa
   if (!req.files.aadhaarFront || !req.files.aadhaarBack) {
     return res.status(400).json({ error: "Both front and back Aadhaar images are required!" });
   }
-  console.log("hello from backend",aadhaarBack,aadhaarFront);
   const frontImagePath = req.files.aadhaarFront[0].path;
   const backImagePath = req.files.aadhaarBack[0].path;
 
