@@ -6,7 +6,7 @@ const Tesseract = require("tesseract.js");
 const fs = require("fs");
 
 const app = express();
-app.use(cors({ origin: "https://frontend-pied-phi-26.vercel.app/" }));
+app.use(cors());
 app.use(express.json());
 
 // Setup Multer for file uploads
@@ -91,17 +91,9 @@ function extractAddress(rawText) {
   const addressRegex = /(.+?),\s*(DIST:?\s*[\w\s]+)?,\s*([\w\s]+)-\s*(\d{6})/i;
   const match = cleanedText.match(addressRegex);
 
-  const unwantedTexts = [
-    "EE en Em N aR Rafts gga Sifter As 4 URGuEIGEnCationAuhoRty of India ZZ KAGHAAR Address EE oe or TE aE",
-    "ai mer ei any",
-    "re"
-  ];
-
   return {
     fullAddress: cleanedText,
-    houseName: match
-    ? unwantedTexts.reduce((acc, text) => acc.replace(new RegExp(text, "g"), ""), match[1]).trim()
-    : "Not Found",
+    houseName: match ? match[1]?.replace("EE en Em N aR Rafts gga Sifter As 4 URGuEIGEnCationAuhoRty of India ZZ KAGHAAR Address EE oe or TE aE","").trim() : "Not Found",
     district: match ? match[2]?.replace("DIST ", "").trim() : "Not Found",
     state: match ? match[3]?.replace("a es", "").trim()  : "Not Found",
     pinCode: match ? match[4] : "Not Found"
