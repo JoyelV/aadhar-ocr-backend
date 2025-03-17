@@ -9,6 +9,11 @@ const app = express();
 app.use(cors({ origin: "https://frontend-pied-phi-26.vercel.app" }));
 app.use(express.json());
 
+app.use(express.static("public"));
+app.get("/manifest.json", (req, res) => {
+  res.sendFile(__dirname + "/public/manifest.json");
+});
+
 // Setup Multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
