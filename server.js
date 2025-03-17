@@ -7,7 +7,7 @@ const fs = require("fs");
 
 const app = express();
 //app.use(cors({ origin: "http://localhost:3000" }));
-app.use(cors({ origin: "https://frontend-jdz59ot0r-joyel-vargheses-projects.vercel.app" }));
+app.use(cors({ origin: "https://frontend-jdz59ot0r-joyel-vargheses-projects.vercel.app"||"https://frontend-qwxjtccds-joyel-vargheses-projects.vercel.app" }));
 app.use(express.json());
 
 // Setup Multer for file uploads
