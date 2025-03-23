@@ -1,25 +1,26 @@
-require("dotenv").config();
-const express = require("express");
-const multer = require("multer");
-const cors = require("cors");
-const Tesseract = require("tesseract.js");
-const fs = require("fs");
+import dotenv from "dotenv";
+dotenv.config();
+
+import express, { Request, Response } from "express";
+import multer, { StorageEngine } from "multer";
+import cors from "cors";
+import Tesseract from "tesseract.js";
+import fs from "fs";
 
 const app = express();
-//app.use(cors({ origin: "http://localhost:3000" }));
-app.use(cors({ origin: "https://frontend-jdz59ot0r-joyel-vargheses-projects.vercel.app"}));
+app.use(cors({ origin: "https://frontend-jdz59ot0r-joyel-vargheses-projects.vercel.app" }));
 app.use(express.json());
 
-// Setup Multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+const storage: StorageEngine = multer.diskStorage({
+  destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({ storage });
 
 // Create Uploads Directory if Not Exists
 if (!fs.existsSync("uploads")) {
@@ -27,12 +28,15 @@ if (!fs.existsSync("uploads")) {
 }
 
 // Aadhaar OCR API
-app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaarBack" }]), async (req, res) => {
-  if (!req.files.aadhaarFront || !req.files.aadhaarBack) {
-    return res.status(400).json({ error: "Both front and back Aadhaar images are required!" });
+app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaarBack" }]), async (req: Request, res: Response) => {
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+  if (!files.aadhaarFront || !files.aadhaarBack) {
+   res.status(400).json({ error: "Both front and back Aadhaar images are required!" });
+   return ;
   }
-  const frontImagePath = req.files.aadhaarFront[0].path;
-  const backImagePath = req.files.aadhaarBack[0].path;
+
+  const frontImagePath = files.aadhaarFront[0].path;
+  const backImagePath = files.aadhaarBack[0].path;
 
   try {
     // Extract Text from Images
@@ -46,7 +50,7 @@ app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaa
     // Send Response
     res.json({ success: true, data: extractedData });
   } catch (error) {
-    res.status(500).json({ error: "OCR Processing Failed!", details: error.message });
+    res.status(500).json({ error: "OCR Processing Failed!", details: (error as Error).message });
   } finally {
     // Cleanup uploaded files
     fs.unlinkSync(frontImagePath);
@@ -55,7 +59,7 @@ app.post("/api/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaa
 });
 
 // Function to extract Aadhaar details
-function parseAadhaarData(frontText, backText) {  
+function parseAadhaarData(frontText: string, backText: string) {
   const nameRegex = /([A-Z][a-z]+ [A-Z][a-z]+)/;
   const dobRegex = /DOB[:\s]+(\d{2}\/\d{2}\/\d{4})/;
   const aadhaarRegex = /(\d{4}\s\d{4}\s\d{4})/;
@@ -77,12 +81,12 @@ function parseAadhaarData(frontText, backText) {
     address: address.houseName,
     district: address.district,
     state: address.state,
-    pinCode: address.pinCode
+    pinCode: address.pinCode,
   };
 }
 
 // Function to extract a cleaned address
-function extractAddress(rawText) {
+function extractAddress(rawText: string) {
   let cleanedText = rawText
     .replace(/[^A-Za-z0-9,\s-]/g, "") 
     .replace(/\s+/g, " ") 
@@ -93,10 +97,10 @@ function extractAddress(rawText) {
 
   return {
     fullAddress: cleanedText,
-    houseName: match ? match[1]?.replace("EE en Em N aR Rafts gga Sifter As 4 URGuEIGEnCationAuhoRty of India ZZ KAGHAAR Address EE oe or TE aE","").trim() : "Not Found",
+    houseName: match ? match[1]?.replace("EE en Em N aR Rafts gga Sifter As 4 URGuEIGEnCationAuhoRty of India ZZ KAGHAAR Address EE oe or TE aE", "").trim() : "Not Found",
     district: match ? match[2]?.replace("DIST ", "").trim() : "Not Found",
-    state: match ? match[3]?.replace("a es", "").trim()  : "Not Found",
-    pinCode: match ? match[4] : "Not Found"
+    state: match ? match[3]?.replace("a es", "").trim() : "Not Found",
+    pinCode: match ? match[4] : "Not Found",
   };
 }
 
