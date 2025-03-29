@@ -8,7 +8,7 @@ import Tesseract from "tesseract.js";
 import fs from "fs";
 
 const app = express();
-app.use(cors({ origin: "https://frontend-kn2425rbi-joyel-vargheses-projects.vercel.app" }));
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const storage: StorageEngine = multer.diskStorage({
