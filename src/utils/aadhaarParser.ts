@@ -16,18 +16,36 @@ export function parseAadhaarData(frontText: string, backText: string) {
 }
 
 function extractName(text: string): string {
-  const lines = text.split('\n');
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  const addressKeywords = /(House|Road|Street|PO:|DIST:|Pin|Kerala)/i;
+
   for (const line of lines) {
-    if (line.toLowerCase().includes('government') ||
-        line.toLowerCase().includes('india') ||
-        line.toLowerCase().includes('aadhaar') ||
-        line.toLowerCase().includes('uid')) {
+    if (
+      line.toLowerCase().includes('government') ||
+      line.toLowerCase().includes('india') ||
+      line.toLowerCase().includes('aadhaar') ||
+      line.toLowerCase().includes('uid') ||
+      line.toLowerCase().includes('vid') ||
+      line.includes('help@uidai.gov.in') ||
+      line.includes('www.uidai.gov.in')
+    ) {
       continue;
     }
-    if (line.match(/^[A-Za-z\s]{2,50}$/)) {
-      return line.trim();
+
+    const cleanedLine = line
+      .replace(/[^A-Za-z\s.]/g, '') 
+      .replace(/\s+/g, ' ') 
+      .trim();
+
+    if (cleanedLine.match(/^[A-Za-z\s.]{2,50}$/) && !addressKeywords.test(cleanedLine)) {
+      return cleanedLine;
     }
   }
+
   return 'Not Found';
 }
 
