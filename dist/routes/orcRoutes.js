@@ -1,6 +1,11 @@
-import express from "express";
-import { upload } from "../config/multerConfig.js";
-import { uploadAadhaar } from "../controllers/orcControllers.js";
+import express from 'express';
+import multer from 'multer';
+import { recognizeText } from '../controllers/orcControllers.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 const router = express.Router();
-router.post("/upload", upload.fields([{ name: "aadhaarFront" }, { name: "aadhaarBack" }]), uploadAadhaar);
+const upload = multer({ storage: multer.memoryStorage() });
+router.post('/upload-aadhaar', authMiddleware, upload.fields([
+    { name: 'front', maxCount: 1 },
+    { name: 'back', maxCount: 1 }
+]), recognizeText);
 export default router;

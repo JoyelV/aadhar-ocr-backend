@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import ocrRoutes from './routes/authRoutes.js';
+import ocrRoutes from './routes/orcRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import historyRoutes from './routes/historyRoutes.js';
 import dotenv from 'dotenv';
 dotenv.config();
 const app = express();
@@ -14,4 +15,5 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api', ocrRoutes);
+app.use('/api/history', historyRoutes);
 export default app;

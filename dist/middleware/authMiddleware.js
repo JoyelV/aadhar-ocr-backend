@@ -5,7 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 export const authMiddleware = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
+        res.status(401).json({ message: 'No token provided' });
+        return;
     }
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
