@@ -1,31 +1,33 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const aadhaarScanSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  frontImage: {
-    type: String,
-    required: true,
-  },
-  backImage: {
-    type: String,
-    required: true,
-  },
+interface IAadhaarScan extends Document {
+  userId: string;
+  frontImage: string;
+  backImage: string;
   parsedData: {
-    aadhaarNumber: { type: String, required: false },
-    name: { type: String, required: false },
-    dob: { type: String, required: false },
-    gender: { type: String, required: false },
-    address: { type: String, required: false },
-    error: { type: String, required: false },
+    name: string;
+    aadhaarNumber: string;
+    dob: string;
+    gender: string;
+    address: string;
+    pinCode: string;
+  };
+  createdAt: Date;
+}
+
+const aadhaarScanSchema: Schema = new Schema({
+  userId: { type: String, required: true },
+  frontImage: { type: String, required: true }, // Base64-encoded image
+  backImage: { type: String, required: true },
+  parsedData: {
+    name: String,
+    aadhaarNumber: String,
+    dob: String,
+    gender: String,
+    address: String,
+    pinCode: String,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  createdAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('AadhaarScan', aadhaarScanSchema);
+export default mongoose.model<IAadhaarScan>('AadhaarScan', aadhaarScanSchema);
