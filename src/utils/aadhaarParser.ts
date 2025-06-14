@@ -1,4 +1,6 @@
 export function parseAadhaarData(frontText: string, backText: string) {
+  console.log('Front Text:', frontText);
+  console.log('Back Text:', backText);
   const details = {
     name: extractName(frontText),
     aadhaarNumber: extractAadhaarNumber(frontText, backText),
@@ -16,19 +18,50 @@ export function parseAadhaarData(frontText: string, backText: string) {
 }
 
 function extractName(text: string): string {
-  const lines = text.split('\n');
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  const ignoreKeywords = [
+    'government', 'india', 'aadhaar', 'uid',
+    'date of birth', 'dob', 'male', 'female',
+    'address', 'vid', 'year of birth', 'dob:', 'gender'
+  ];
+
+  const possibleNames: string[] = [];
+
   for (const line of lines) {
-    if (line.toLowerCase().includes('government') ||
-        line.toLowerCase().includes('india') ||
-        line.toLowerCase().includes('aadhaar') ||
-        line.toLowerCase().includes('uid')) {
+    const lowerLine = line.toLowerCase();
+
+    // Skip if line contains irrelevant keywords
+    if (ignoreKeywords.some(keyword => lowerLine.includes(keyword))) {
       continue;
     }
-    // if (line.match(/^[A-Za-z\s]{2,50}$/)) {
-    //   return line.trim();
-    // }
-    return line;
+
+    // Clean the line by removing common OCR noise
+    const cleanedLine = line
+      .replace(/[^A-Za-z\s'"|]/g, '') // Allow letters, spaces, quotes, and pipes
+      .replace(/\s+/g, ' ') // Normalize spaces
+      .trim();
+
+    // Skip if line is too short or too long
+    if (cleanedLine.length < 3 || cleanedLine.length > 50) {
+      continue;
+    }
+
+    // Match name pattern within the line (two or more capitalized words)
+    const nameMatch = cleanedLine.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+    if (nameMatch) {
+      possibleNames.push(nameMatch[0]);
+    }
   }
+
+  // Return the longest possible match or fallback
+  if (possibleNames.length > 0) {
+    return possibleNames.sort((a, b) => b.length - a.length)[0];
+  }
+
   return 'Not Found';
 }
 
@@ -50,39 +83,6 @@ function extractAadhaarNumber(frontText: string, backText: string): string {
   const matchFront = frontText.match(/\d{4}\s\d{4}\s\d{4}/);
   const matchBack = backText.match(/\d{4}\s\d{4}\s\d{4}/);
   return matchFront?.[0] || matchBack?.[0] || 'Not Found';
-}
-
-function extractPincode(address: string): { pincode: string; index: number } {
-  const match = address.match(/\b\d{6}\b/);
-  return {
-    pincode: match ? match[0] : '',
-    index: match ? address.indexOf(match[0]) : -1
-  };
-}
-
-function cleanAddress(address: string): string {
-  return address
-    .replace(/help@uidai\.gov\.in/g, '')
-    .replace(/www\.uidai\.gov\.in/g, '')
-    .replace(/\b\d{6}\b/g, '')
-    .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '')
-    .replace(/\b1947\b/g, '')
-    .replace(/Testing\s*/i, '')
-    .replace(/,\s*,+/g, ',')
-    .replace(/\s+/g, ' ')
-    .replace(/,\s*\./g, '.')
-    .replace(/\s*\.\s*$/g, '')
-    .replace(/,(\s*,\s*)+/g, ',')
-    .replace(/,\s*$/g, '')
-    .trim();
-}
-
-function formatFinalAddress(address: string): string {
-  return address
-    .split(',')
-    .map(part => part.trim())
-    .filter(part => part.length > 0)
-    .join(', ') + '.';
 }
 
 function extractAddress(text: string): { address: string; pinCode: string } {
