@@ -19,14 +19,14 @@ export const getScanHistory = async (req: AuthRequest, res: Response) => {
 
 export const deleteScan = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { scanId } = req.params;
     const userId = req.user?.userId;
 
-    if (!id) {
+    if (!scanId) {
        res.status(400).json({ message: 'Scan ID is required' });
        return;
     }
-    const scan = await AadhaarScan.findOneAndDelete({ _id: id, userId });
+    const scan = await AadhaarScan.findOneAndDelete({ _id: scanId, userId });
     if (!scan) {
        res.status(404).json({ message: 'Scan not found or you do not have permission to delete it' });
        return;
