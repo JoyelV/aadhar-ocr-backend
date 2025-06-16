@@ -16,3 +16,25 @@ export const getScanHistory = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Failed to fetch scan history' });
   }
 };
+
+export const deleteScan = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+
+    if (!id) {
+       res.status(400).json({ message: 'Scan ID is required' });
+       return;
+    }
+    const scan = await AadhaarScan.findOneAndDelete({ _id: id, userId });
+    if (!scan) {
+       res.status(404).json({ message: 'Scan not found or you do not have permission to delete it' });
+       return;
+    }
+
+    res.status(200).json({ message: 'Scan deleted successfully' });
+  } catch (error: any) {
+    console.error('Delete Scan Error:', error);
+    res.status(500).json({ message: 'Failed to delete scan', error: error.message });
+  }
+};
