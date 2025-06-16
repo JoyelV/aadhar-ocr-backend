@@ -5,6 +5,6 @@ import { deleteScan, getScanHistory } from '../controllers/historyController.js'
 const router = express.Router();
 
 router.get('/scans', authMiddleware, getScanHistory);
-router.get('/scans/:scanId', authMiddleware, deleteScan);
+router.delete('/scans/:scanId', authMiddleware, deleteScan);
 
 export default router;
