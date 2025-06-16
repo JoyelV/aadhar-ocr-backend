@@ -17,18 +17,19 @@ export const recognizeText = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    // Perform OCR
     const frontResult = await Tesseract.recognize(frontFile.buffer, 'eng');
     const backResult = await Tesseract.recognize(backFile.buffer, 'eng');
 
-    // Parse the OCR output using parseAadhaarData
     const parsedData = parseAadhaarData(frontResult.data.text, backResult.data.text);
 
-    // Convert images to base64 for storage
+    console.log(parsedData,"parsedData");
+    if(!parsedData.name || !parsedData.aadhaarNumber ||!parsedData.dob||!parsedData.gender||!parsedData.address||!parsedData.pinCode ){
+       res.status(400).json({message:"Uploaded Aadhaar Card Images not valid"});
+    }
+
     const frontImageBase64 = frontFile.buffer.toString('base64');
     const backImageBase64 = backFile.buffer.toString('base64');
 
-    // Save scan data to database
     const scan = new AadhaarScan({
       userId: req.user?.userId,
       frontImage: `data:image/jpeg;base64,${frontImageBase64}`,
