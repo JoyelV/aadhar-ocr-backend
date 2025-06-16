@@ -23,14 +23,17 @@ export const recognizeText = async (req: AuthRequest, res: Response) => {
     const parsedData = parseAadhaarData(frontResult.data.text, backResult.data.text);
 
     console.log(parsedData,"parsedData");
-    if(!parsedData.name && !parsedData.aadhaarNumber && !parsedData.dob && !parsedData.gender && !parsedData.address && !parsedData.pinCode ){
+    let validCheck = true;
+    if(!parsedData.name || !parsedData.aadhaarNumber || !parsedData.dob || !parsedData.gender || !parsedData.address || !parsedData.pinCode ){
        res.status(400).json({message:"Uploaded Aadhaar Card Images not valid"});
+       validCheck = false;
        return ;
     }
 
     const frontImageBase64 = frontFile.buffer.toString('base64');
     const backImageBase64 = backFile.buffer.toString('base64');
-
+    
+    if(validCheck){
     const scan = new AadhaarScan({
       userId: req.user?.userId,
       frontImage: `data:image/jpeg;base64,${frontImageBase64}`,
@@ -38,8 +41,8 @@ export const recognizeText = async (req: AuthRequest, res: Response) => {
       parsedData,
     });
     await scan.save();
-
     res.json(parsedData);
+  }
   } catch (error: any) {
     console.error('OCR Error:', error);
     if (error.message === 'Uploaded images do not appear to be Aadhaar cards') {
