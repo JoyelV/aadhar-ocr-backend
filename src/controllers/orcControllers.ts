@@ -40,12 +40,16 @@ export const recognizeText = async (req: AuthRequest, res: Response) => {
     res.json(parsedData);
   } catch (error: any) {
     console.error('OCR Error:', error);
+    if (error.message === 'Uploaded images do not appear to be Aadhaar cards') {
+      res.status(400).json({ message: 'Uploaded images are not valid Aadhaar cards. Please upload correct Aadhaar images.' });
+      return;
+    }
     if (error.code === 'LIMIT_UNEXPECTED_FILE') {
       res.status(400).json({
         message: `Unexpected field in form data. Expected fields: 'front', 'back'. Received: ${error.field}`,
       });
+      return;
     }
     res.status(500).json({ message: 'OCR processing failed', error: error.message });
   }
 };
-
