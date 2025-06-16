@@ -9,7 +9,7 @@ export const getScanHistory = async (req: AuthRequest, res: Response) => {
   try {
     const scans = await AadhaarScan.find({ userId: req.user?.userId })
       .select('frontImage backImage parsedData createdAt')
-      .sort({ createdAt: -1 }); // Sort by newest first
+      .sort({ createdAt: -1 }); 
     res.json(scans);
   } catch (error) {
     console.error('History Error:', error);
