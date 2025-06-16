@@ -98,84 +98,6 @@ function extractAadhaarNumber(frontText: string, backText: string): string {
   return matchFront?.[0] || matchBack?.[0] || 'Not Found';
 }
 
-// function extractAddress(text: string): { address: string; pinCode: string } {
-//   const lines = text
-//     .split('\n')
-//     .map(line => line.trim())
-//     .filter(line => line.length > 0);
-
-//   let addressParts: string[] = [];
-//   let pinCode = 'Not Found';
-
-//   const addressRegex = /(?:[A-Za-z0-9\s,]+(?:House|Road|Street|Lane|Nagar|Village|PO:|DIST:|Kerala|Taluk|Block))/i;
-//   const pinCodeRegex = /\b\d{6}\b/;
-
-//   const ignoreKeywords = [
-//     'government', 'india', 'aadhaar', 'uid', 'uidai',
-//     'vid', 'enrolment', 'enrollment', 'care of', 'c/o',
-//     'unique identification', 'authority', 'toll free',
-//     'website', 'email', 'barcode', 'qr code'
-//   ];
-
-//   lines.forEach(line => {
-//     const lowerLine = line.toLowerCase();
-
-//     if (ignoreKeywords.some(keyword => lowerLine.includes(keyword))) {
-//       return;
-//     }
-
-//     let cleanedLine = line
-//       .replace(/[^A-Za-z0-9\s,-]/g, '') 
-//       .replace(/help@uidai\.gov\.in/g, '')
-//       .replace(/www\.uidai\.gov\.in/g, '')
-//       .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '') 
-//       .replace(/\b1947\b/g, '') 
-//       .replace(/\s+/g, ' ') 
-//       .trim();
-
-//     const pinMatch = cleanedLine.match(pinCodeRegex);
-//     if (pinMatch) {
-//       pinCode = pinMatch[0];
-//       cleanedLine = cleanedLine.replace(pinCodeRegex, '').trim();
-//     }
-
-//     if (addressRegex.test(cleanedLine) && cleanedLine.length > 0) {
-//       const parts = cleanedLine
-//         .split(/[, ]+/)
-//         .map(part => {
-//           if (part.length > 0) {
-//             return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-//           }
-//           return part;
-//         })
-//         .filter(part => part.length > 0 && !part.match(/^\d+$/)); 
-//       addressParts.push(...parts);
-//     }
-//   });
-
-//   let fullAddress = addressParts
-//     .filter(part => {
-//       return part.length > 2 && !ignoreKeywords.some(keyword => part.toLowerCase().includes(keyword));
-//     })
-//     .join(', ')
-//     .replace(/,\s*,+/g, ',') 
-//     .replace(/\s+/g, ' ') 
-//     .replace(/,(\s*,\s*)+/g, ',') 
-//     .replace(/,\s*$/g, '') 
-//     .trim();
-
-//   if (!fullAddress) {
-//     return { address: 'Not Found', pinCode };
-//   }
-
-//   fullAddress = fullAddress + '.';
-
-//   return {
-//     address: fullAddress,
-//     pinCode
-//   };
-// }
-
 function extractAddress(text: string): { address: string; pinCode: string } {
   const lines = text
     .split('\n')
@@ -191,7 +113,6 @@ function extractAddress(text: string): { address: string; pinCode: string } {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Start collecting from "Address:" OR if line starts with S/O or C/O
     if (/^Address[:：]?$/.test(line) || /^[SC]\/O[:：]?/i.test(line)) {
       collecting = true;
     }
@@ -204,19 +125,17 @@ function extractAddress(text: string): { address: string; pinCode: string } {
 
       addressLines.push(line);
 
-      // Heuristic stop if pincode or a state keyword like Kerala is found
       if (line.toLowerCase().includes('kerala') || pinCodeRegex.test(line)) {
         break;
       }
     }
   }
 
-  // Clean up and format the address
   const address = addressLines
     .join(', ')
     .replace(/\s+/g, ' ')
     .replace(/,+/g, ',')
-    .replace(/,\s*$/, '') // remove trailing comma
+    .replace(/,\s*$/, '') 
     .trim();
 
   return {
