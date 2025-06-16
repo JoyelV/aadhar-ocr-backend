@@ -25,6 +25,7 @@ export const recognizeText = async (req: AuthRequest, res: Response) => {
     console.log(parsedData,"parsedData");
     if(!parsedData.name || !parsedData.aadhaarNumber ||!parsedData.dob||!parsedData.gender||!parsedData.address||!parsedData.pinCode ){
        res.status(400).json({message:"Uploaded Aadhaar Card Images not valid"});
+       return ;
     }
 
     const frontImageBase64 = frontFile.buffer.toString('base64');
