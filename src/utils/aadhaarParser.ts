@@ -1,6 +1,5 @@
 export function parseAadhaarData(frontText: string, backText: string) {
-  console.log('Front Text:', frontText);
-  console.log('Back Text:', backText);
+
   const details = {
     name: extractName(frontText),
     aadhaarNumber: extractAadhaarNumber(frontText, backText),
@@ -85,6 +84,74 @@ function extractAadhaarNumber(frontText: string, backText: string): string {
   return matchFront?.[0] || matchBack?.[0] || 'Not Found';
 }
 
+// function extractAddress(text: string): { address: string; pinCode: string } {
+//   // Split text into lines and clean up noise
+//   const lines = text
+//     .split('\n')
+//     .map(line => line.trim())
+//     .filter(line => line.length > 0);
+
+//   // Initialize variables
+//   let addressParts: string[] = [];
+//   let pinCode = 'Not Found';
+
+//   // Regular expression to match potential address components
+//   const addressRegex = /(?:[A-Za-z0-9\s,]+(?:House|Road|PO:|DIST:|Kerala))/i;
+//   const pinCodeRegex = /\b\d{6}\b/;
+
+//   // Iterate through lines to find address components and PIN code
+//   lines.forEach(line => {
+//     // Remove noise (random characters, email, etc.)
+//     let cleanedLine = line
+//       .replace(/[^A-Za-z0-9\s,:;-]/g, '') // Remove special characters except allowed ones
+//       .replace(/help@uidai\.gov\.in/g, '')
+//       .replace(/www\.uidai\.gov\.in/g, '')
+//       .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '') // Remove 12-digit Aadhaar-like numbers
+//       .replace(/\b1947\b/g, '')
+//       .trim();
+
+//     // Check for PIN code
+//     const pinMatch = cleanedLine.match(pinCodeRegex);
+//     if (pinMatch) {
+//       pinCode = pinMatch[0];
+//       cleanedLine = cleanedLine.replace(pinCodeRegex, '').trim();
+//     }
+
+//     // Check if the line contains address-like components
+//     if (addressRegex.test(cleanedLine) && cleanedLine.length > 0) {
+//       // Split by commas and filter out empty parts
+//       const parts = cleanedLine
+//         .split(',')
+//         .map(part => part.trim())
+//         .filter(part => part.length > 0);
+//       addressParts.push(...parts);
+//     }
+//   });
+
+//   // Clean and format the address
+//   let fullAddress = addressParts
+//     .filter(part => part.length > 0 && !part.match(/^\d+$/)) // Remove standalone numbers
+//     .join(', ')
+//     .replace(/,\s*,+/g, ',') // Remove multiple commas
+//     .replace(/\s+/g, ' ') // Normalize spaces
+//     .replace(/,(\s*,\s*)+/g, ',') // Remove consecutive commas
+//     .replace(/,\s*$/g, '') // Remove trailing comma
+//     .trim();
+
+//   // If no address found, return default
+//   if (!fullAddress) {
+//     return { address: 'Not Found', pinCode };
+//   }
+
+//   // Add a period at the end of the address
+//   fullAddress = fullAddress + '.';
+
+//   return {
+//     address: fullAddress,
+//     pinCode
+//   };
+// }
+
 function extractAddress(text: string): { address: string; pinCode: string } {
   // Split text into lines and clean up noise
   const lines = text
@@ -97,18 +164,34 @@ function extractAddress(text: string): { address: string; pinCode: string } {
   let pinCode = 'Not Found';
 
   // Regular expression to match potential address components
-  const addressRegex = /(?:[A-Za-z0-9\s,]+(?:House|Road|PO:|DIST:|Kerala))/i;
+  const addressRegex = /(?:[A-Za-z0-9\s,]+(?:House|Road|Street|Lane|Nagar|Village|PO:|DIST:|Kerala|Taluk|Block))/i;
   const pinCodeRegex = /\b\d{6}\b/;
+
+  // Keywords to ignore in address lines
+  const ignoreKeywords = [
+    'government', 'india', 'aadhaar', 'uid', 'uidai',
+    'vid', 'enrolment', 'enrollment', 'care of', 'c/o',
+    'unique identification', 'authority', 'toll free',
+    'website', 'email', 'barcode', 'qr code'
+  ];
 
   // Iterate through lines to find address components and PIN code
   lines.forEach(line => {
-    // Remove noise (random characters, email, etc.)
+    const lowerLine = line.toLowerCase();
+
+    // Skip lines with irrelevant keywords
+    if (ignoreKeywords.some(keyword => lowerLine.includes(keyword))) {
+      return;
+    }
+
+    // Remove noise (random characters, emails, URLs, Aadhaar numbers, etc.)
     let cleanedLine = line
-      .replace(/[^A-Za-z0-9\s,:;-]/g, '') // Remove special characters except allowed ones
+      .replace(/[^A-Za-z0-9\s,-]/g, '') // Allow only letters, numbers, spaces, commas, hyphens
       .replace(/help@uidai\.gov\.in/g, '')
       .replace(/www\.uidai\.gov\.in/g, '')
-      .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '') // Remove 12-digit Aadhaar-like numbers
-      .replace(/\b1947\b/g, '')
+      .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '') // Remove Aadhaar numbers
+      .replace(/\b1947\b/g, '') // Remove specific years like 1947
+      .replace(/\s+/g, ' ') // Normalize spaces
       .trim();
 
     // Check for PIN code
@@ -120,18 +203,27 @@ function extractAddress(text: string): { address: string; pinCode: string } {
 
     // Check if the line contains address-like components
     if (addressRegex.test(cleanedLine) && cleanedLine.length > 0) {
-      // Split by commas and filter out empty parts
+      // Split by commas or spaces for address parts
       const parts = cleanedLine
-        .split(',')
-        .map(part => part.trim())
-        .filter(part => part.length > 0);
+        .split(/[, ]+/)
+        .map(part => {
+          // Capitalize first letter of each part for consistency
+          if (part.length > 0) {
+            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+          }
+          return part;
+        })
+        .filter(part => part.length > 0 && !part.match(/^\d+$/)); // Remove standalone numbers
       addressParts.push(...parts);
     }
   });
 
   // Clean and format the address
   let fullAddress = addressParts
-    .filter(part => part.length > 0 && !part.match(/^\d+$/)) // Remove standalone numbers
+    .filter(part => {
+      // Remove parts that are too short or likely noise
+      return part.length > 2 && !ignoreKeywords.some(keyword => part.toLowerCase().includes(keyword));
+    })
     .join(', ')
     .replace(/,\s*,+/g, ',') // Remove multiple commas
     .replace(/\s+/g, ' ') // Normalize spaces
@@ -152,4 +244,3 @@ function extractAddress(text: string): { address: string; pinCode: string } {
     pinCode
   };
 }
-
