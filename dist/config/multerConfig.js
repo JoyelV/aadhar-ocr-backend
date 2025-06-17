@@ -1,5 +1,5 @@
 import multer from "multer";
-import { AadhaarValidationError } from '../utlis/errors';
+import { AadhaarValidationError } from '../utlis/errors.js';
 // Configure Multer for file uploads
 export const upload = multer({
     storage: multer.memoryStorage(),
