@@ -32,7 +32,6 @@ This is the backend of the Aadhaar OCR System, built with **Node.js**, **Express
 
 ## Project Structure
 ```
-```
 server/
 ├── src/
 │   ├── config/                # Configuration (e.g., env, db, cors)
@@ -54,7 +53,7 @@ server/
 ├── tsconfig.json              # TypeScript configuration
 └── package.json               # Dependencies and scripts
 ```
-```
+
 ## Setup Instructions
 
 ### 1. Clone the Repository
@@ -143,5 +142,3 @@ curl -X POST http://localhost:5000/api/aadhaar/upload \
 ## License
 Licensed under the [MIT License](LICENSE).
 ```
-
----
