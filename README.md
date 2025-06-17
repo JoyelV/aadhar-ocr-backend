@@ -1,6 +1,3 @@
-### Backend README (`server/README.md`)
-
-```markdown
 # Aadhaar OCR System - Backend
 
 This is the backend of the Aadhaar OCR System, built with **Node.js**, **Express.js**, **TypeScript**, and **MongoDB**. It provides APIs for user authentication, Aadhaar card image uploads, OCR processing, and scan history retrieval. The backend follows the repository pattern and SOLID principles for modularity and maintainability.
@@ -35,6 +32,7 @@ This is the backend of the Aadhaar OCR System, built with **Node.js**, **Express
 
 ## Project Structure
 ```
+```
 server/
 ├── src/
 │   ├── config/                # Configuration (e.g., env, db, cors)
@@ -56,7 +54,7 @@ server/
 ├── tsconfig.json              # TypeScript configuration
 └── package.json               # Dependencies and scripts
 ```
-
+```
 ## Setup Instructions
 
 ### 1. Clone the Repository
