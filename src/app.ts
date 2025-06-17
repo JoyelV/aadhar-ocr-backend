@@ -1,13 +1,15 @@
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import aadhaarParseRoutes from './routes/orcRoutes.js';
+import rateLimit from 'express-rate-limit';
+import aadhaarParseRoutes from './routes/aadhaarParseRoutes'; 
 import authRoutes from './routes/authRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
 import { connectDB } from './config/db.js';
 import { getAllowedOrigins } from './config/cors.js';
+import {authMiddleware} from './middleware/authMiddleware.js'; 
 
 const app: Express = express();
 
@@ -18,7 +20,7 @@ connectDB().catch((err) => {
 });
 
 // Middleware
-app.use(helmet());
+app.use(helmet()); 
 app.use(morgan('combined')); 
 app.use(
   cors({
@@ -29,9 +31,9 @@ app.use(
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); 
 app.use('/api/aadhaar', aadhaarParseRoutes); 
-app.use('/api/history', historyRoutes);
+app.use('/api/history', historyRoutes); 
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
@@ -39,9 +41,24 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', mongodb: dbStatus });
 });
 
-// Global error handling middleware
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+// Custom error handling middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled error:', err);
+
+  // Handle specific error types
+  if (err.name === 'AadhaarValidationError') {
+     res.status(400).json({ message: err.message, error: 'Invalid Aadhaar data' });
+     return;
+  }
+  if (err.name === 'UnauthorizedError') {
+     res.status(401).json({ message: 'Unauthorized access', error: err.message });
+     return;
+  }
+  if (err.name === 'RateLimitError') {
+     res.status(429).json({ message: err.message });
+     return;
+  }
+
   res.status(500).json({ message: 'Internal server error' });
 });
 

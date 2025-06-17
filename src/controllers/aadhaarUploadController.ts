@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import AadhaarParseService from '../services/aadhaarParseService.js';
-import OCRService from '../services/orcService.js';
+import OCRService from '../services/ocrService.js';
 import AadhaarScanRepository from '../repositories/aadhaarScanRepository.js';
 import { AadhaarDetails } from '../types/aadhaarTypes.js';
 
