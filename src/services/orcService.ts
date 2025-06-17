@@ -1,23 +1,11 @@
-import { Request } from "express";
-import { recognizeText } from "../repositories/orcRepository.js";
-import { parseAadhaarData } from "../utils/aadhaarParser.js";
-import { deleteFiles } from "../utils/fileUtils.js";
+import Tesseract from 'tesseract.js';
+import OCRServiceInterface from '../interfaces/ocrServiceInterface.js';
 
-export const performOCR = async (req: Request) => {
-  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  if (!files.aadhaarFront || !files.aadhaarBack) {
-    throw new Error("Both front and back Aadhaar images are required!");
+class OCRService implements OCRServiceInterface {
+  async recognizeText(buffer: Buffer): Promise<string> {
+    const result = await Tesseract.recognize(buffer, 'eng');
+    return result.data.text;
   }
+}
 
-  const frontImage = files.aadhaarFront[0].path;
-  const backImage = files.aadhaarBack[0].path;
-
-  try {
-    const frontText = await recognizeText(frontImage);
-    const backText = await recognizeText(backImage);
-
-    return parseAadhaarData(frontText, backText);
-  } finally {
-    deleteFiles([frontImage, backImage]);
-  }
-};
+export default OCRService;

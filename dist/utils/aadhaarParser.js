@@ -1,6 +1,7 @@
 export function parseAadhaarData(frontText, backText) {
-    console.log('Front Text:', frontText);
-    console.log('Back Text:', backText);
+    if (!isAadhaarCard(frontText, backText)) {
+        throw new Error('Uploaded images do not appear to be Aadhaar cards');
+    }
     const details = {
         name: extractName(frontText),
         aadhaarNumber: extractAadhaarNumber(frontText, backText),
@@ -13,6 +14,15 @@ export function parseAadhaarData(frontText, backText) {
     details.address = address;
     details.pinCode = pinCode;
     return details;
+}
+function isAadhaarCard(frontText, backText) {
+    const lowerFrontText = frontText.toLowerCase();
+    const lowerBackText = backText.toLowerCase();
+    const aadhaarKeywords = ['aadhaar', 'uidai', 'unique identification authority', 'government of india'];
+    const aadhaarNumberRegex = /\d{4}\s\d{4}\s\d{4}/;
+    const hasAadhaarKeyword = aadhaarKeywords.some(keyword => lowerFrontText.includes(keyword) || lowerBackText.includes(keyword));
+    const hasAadhaarNumber = aadhaarNumberRegex.test(frontText) || aadhaarNumberRegex.test(backText);
+    return hasAadhaarKeyword && hasAadhaarNumber;
 }
 function extractName(text) {
     const lines = text
@@ -27,26 +37,21 @@ function extractName(text) {
     const possibleNames = [];
     for (const line of lines) {
         const lowerLine = line.toLowerCase();
-        // Skip if line contains irrelevant keywords
         if (ignoreKeywords.some(keyword => lowerLine.includes(keyword))) {
             continue;
         }
-        // Clean the line by removing common OCR noise
         const cleanedLine = line
-            .replace(/[^A-Za-z\s'"|]/g, '') // Allow letters, spaces, quotes, and pipes
-            .replace(/\s+/g, ' ') // Normalize spaces
+            .replace(/[^A-Za-z\s'"|]/g, '')
+            .replace(/\s+/g, ' ')
             .trim();
-        // Skip if line is too short or too long
         if (cleanedLine.length < 3 || cleanedLine.length > 50) {
             continue;
         }
-        // Match name pattern within the line (two or more capitalized words)
         const nameMatch = cleanedLine.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
         if (nameMatch) {
             possibleNames.push(nameMatch[0]);
         }
     }
-    // Return the longest possible match or fallback
     if (possibleNames.length > 0) {
         return possibleNames.sort((a, b) => b.length - a.length)[0];
     }
@@ -74,60 +79,39 @@ function extractAadhaarNumber(frontText, backText) {
     return matchFront?.[0] || matchBack?.[0] || 'Not Found';
 }
 function extractAddress(text) {
-    // Split text into lines and clean up noise
     const lines = text
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0);
-    // Initialize variables
-    let addressParts = [];
+    let collecting = false;
+    let addressLines = [];
     let pinCode = 'Not Found';
-    // Regular expression to match potential address components
-    const addressRegex = /(?:[A-Za-z0-9\s,]+(?:House|Road|PO:|DIST:|Kerala))/i;
     const pinCodeRegex = /\b\d{6}\b/;
-    // Iterate through lines to find address components and PIN code
-    lines.forEach(line => {
-        // Remove noise (random characters, email, etc.)
-        let cleanedLine = line
-            .replace(/[^A-Za-z0-9\s,:;-]/g, '') // Remove special characters except allowed ones
-            .replace(/help@uidai\.gov\.in/g, '')
-            .replace(/www\.uidai\.gov\.in/g, '')
-            .replace(/\b\d{4}\s\d{4}\s\d{4}\b/g, '') // Remove 12-digit Aadhaar-like numbers
-            .replace(/\b1947\b/g, '')
-            .trim();
-        // Check for PIN code
-        const pinMatch = cleanedLine.match(pinCodeRegex);
-        if (pinMatch) {
-            pinCode = pinMatch[0];
-            cleanedLine = cleanedLine.replace(pinCodeRegex, '').trim();
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (/^Address[:：]?$/.test(line) || /^[SC]\/O[:：]?/i.test(line)) {
+            collecting = true;
         }
-        // Check if the line contains address-like components
-        if (addressRegex.test(cleanedLine) && cleanedLine.length > 0) {
-            // Split by commas and filter out empty parts
-            const parts = cleanedLine
-                .split(',')
-                .map(part => part.trim())
-                .filter(part => part.length > 0);
-            addressParts.push(...parts);
+        if (collecting) {
+            if (pinCodeRegex.test(line)) {
+                const match = line.match(pinCodeRegex);
+                if (match)
+                    pinCode = match[0];
+            }
+            addressLines.push(line);
+            if (line.toLowerCase().includes('kerala') || pinCodeRegex.test(line)) {
+                break;
+            }
         }
-    });
-    // Clean and format the address
-    let fullAddress = addressParts
-        .filter(part => part.length > 0 && !part.match(/^\d+$/)) // Remove standalone numbers
-        .join(', ')
-        .replace(/,\s*,+/g, ',') // Remove multiple commas
-        .replace(/\s+/g, ' ') // Normalize spaces
-        .replace(/,(\s*,\s*)+/g, ',') // Remove consecutive commas
-        .replace(/,\s*$/g, '') // Remove trailing comma
-        .trim();
-    // If no address found, return default
-    if (!fullAddress) {
-        return { address: 'Not Found', pinCode };
     }
-    // Add a period at the end of the address
-    fullAddress = fullAddress + '.';
+    const address = addressLines
+        .join(', ')
+        .replace(/\s+/g, ' ')
+        .replace(/,+/g, ',')
+        .replace(/,\s*$/, '')
+        .trim();
     return {
-        address: fullAddress,
+        address: address || 'Not Found',
         pinCode
     };
 }

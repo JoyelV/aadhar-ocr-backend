@@ -1,19 +1,31 @@
 import { Request, Response } from 'express';
-import AadhaarScan from '../models/AadhaarScan.js';
+import HistoryService from '../services/historyService.js';
 
 interface AuthRequest extends Request {
   user?: { userId: string };
 }
 
-export const getScanHistory = async (req: AuthRequest, res: Response) => {
-  try {
-    const scans = await AadhaarScan.find({ userId: req.user?.userId })
-      .select('frontImage backImage parsedData createdAt')
-      .sort({ createdAt: -1 }); 
-    res.json(scans);
-  } catch (error) {
-    console.error('History Error:', error);
-    res.status(500).json({ message: 'Failed to fetch scan history' });
-  }
-};
+class HistoryController {
+  private historyService: HistoryService;
 
+  constructor(historyService: HistoryService) {
+    this.historyService = historyService;
+  }
+
+  async getScanHistory(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        res.status(401).json({ message: 'Unauthorized' });
+        return;
+      }
+      const scans = await this.historyService.getScanHistory(userId);
+      res.json(scans);
+    } catch (error: any) {
+      console.error('History Error:', error);
+      res.status(500).json({ message: 'Failed to fetch scan history' });
+    }
+  }
+}
+
+export default HistoryController;
