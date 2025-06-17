@@ -3,13 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import rateLimit from 'express-rate-limit';
 import aadhaarParseRoutes from './routes/aadhaarParseRoutes'; 
 import authRoutes from './routes/authRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
 import { connectDB } from './config/db.js';
 import { getAllowedOrigins } from './config/cors.js';
-import {authMiddleware} from './middleware/authMiddleware.js'; 
 
 const app: Express = express();
 
