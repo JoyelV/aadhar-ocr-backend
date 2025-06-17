@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-import aadhaarParseRoutes from './routes/aadhaarParseRoutes'; 
+import aadhaarParseRoutes from './routes/aadhaarParseRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import historyRoutes from './routes/historyRoutes.js';
 import { connectDB } from './config/db.js';
